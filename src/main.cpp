@@ -72,7 +72,7 @@ void generateNodes() {
 
 	nodes = (Node **)calloc(max_elements, sizeof(Node *));
 
-	color_node = new Node(col*rectangle_W + 20, 20, rectangle_W, rectangle_H, 0, 0);
+	color_node = new Node(lin + 5, 1, rectangle_W, rectangle_H, 0, 0);
 	color_node->set_color(sf::Color::White);
 
 	int k = 0;
@@ -204,6 +204,9 @@ void initialize_colors(){
 
 void change_color(){
 
+	node_mutex.lock();
+	skip_render = true;
+
 	// the current color is the first on the queue
 	
 	// to change the color, we just send it to the end
@@ -216,12 +219,15 @@ void change_color(){
 
 	color_node->set_color(new_color);
 
+	node_mutex.unlock();
+	skip_render = false;
+
 	std::cout << "[COlOR] New color: " << new_color.toInteger() << "\n";
 }
 
 void do_pencil(Node** nodes, Node* n, sf::Color current_color){
 
-    n->set_color(current_color);
+	n->set_color(current_color);
 
     Node **neighbors = (Node**)calloc(4, sizeof(Node *));
 
@@ -240,6 +246,8 @@ void do_pencil(Node** nodes, Node* n, sf::Color current_color){
 			n->removeDirection(i);
 		}
     }
+
+
 
     free(neighbors);
 }
