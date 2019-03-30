@@ -71,7 +71,7 @@ void generateNodes() {
 	nodes = (Node **)calloc(max_elements, sizeof(Node *));
 
 	color_node = new Node(lin + 5, 1, rectangle_W, rectangle_H, 0, 0);
-	color_node->set_color(sf::Color::White);
+	color_node->set_color(sf::Color::Red);
 
 	int k = 0;
 	for (int i = 0; i < lin; i++) {
@@ -260,73 +260,54 @@ void do_eraser(Node *n){
     }
 }
 
-void do_bucket(Node **nodes, Node* n,sf::Color current_color){
+void do_bucket(Node **nodes, Node* n,sf::Color new_color){
 
-	n->set_color(current_color);
 	std::queue <Node *> nodesQueue;
 
-	if(n->get_color() == current_color){
+	sf::Color old_color = n->get_color();
+
+	if(n->get_color() != new_color){
 		nodesQueue.push(n);
 	} 
 
 	while(nodesQueue.empty() == false){
 
-		
 		Node* current = nodesQueue.front();
-		Node* aux;
-
-		current->set_color(current_color);
-
 		nodesQueue.pop();
 
-		aux = get_node(nodes, current->position_y - 1, current->position_x);
+		current->set_color(new_color);
 
-		if (current->position_y != 0 && aux->get_color() != current_color) {
+		Node* aux = get_node(nodes, current->position_y - 1, current->position_x);
+
+		if (current->position_y != 0 && aux->get_color() == old_color) {
 			
 			nodesQueue.push(aux);
+			current->registerDirection(0, aux);
 		}
 
 		aux = get_node(nodes, current->position_y + 1, current->position_x);
 
 		
-		if (current->position_y != lin - 1 && aux->get_color() != current_color) {
+		if (current->position_y != lin - 1 && aux->get_color() == old_color) {
 			nodesQueue.push(aux);
+			 current->registerDirection(1, aux);
 		}
 
 		aux = get_node(nodes, current->position_y, current->position_x - 1);
 
-		if (current->position_x != 0 && aux->get_color() != current_color) {
+		if (current->position_x != 0 && aux->get_color() == old_color) {
 			
 			nodesQueue.push(aux);
+			current->registerDirection(2, aux);
 		}
+
 
 		aux = get_node(nodes, current->position_y, current->position_x + 1);
 
-		if (current->position_x != col - 1 && aux->get_color() != current_color) {
+		if (current->position_x != col - 1 && aux->get_color() == old_color) {
 			nodesQueue.push(aux);
+			current->registerDirection(3, aux);
 		} 
-
-		/*if (n->position_x != 0) {
-			neighbor[count_neighbors] = get_node(nodes, n->position_y, n->position_x - 1);
-			count_neighbors++;
-		}
-
-		if (n->position_x != col - 1) {
-			neighbor[count_neighbors] = get_node(nodes, n->position_y, n->position_x + 1);
-			count_neighbors++;
-		}
-
-		if (n->position_y != lin - 1) {
-			neighbor[count_neighbors] = get_node(nodes, n->position_y + 1, n->position_x);
-			count_neighbors++;
-		}
-
-		if (n->position_y != 0) {
-			neighbor[count_neighbors] = get_node(nodes, n->position_y - 1, n->position_x);
-			count_neighbors++;
-		}*/
-		
-		//nodesQueue.push(get_node(nodes, nodesQueue.front()->position_y - 1, nodesQueue.front()->position_x));
 
 	}
 
