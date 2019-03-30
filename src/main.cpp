@@ -261,28 +261,74 @@ void do_eraser(Node *n){
 }
 
 void do_bucket(Node **nodes, Node* n,sf::Color current_color){
+
 	n->set_color(current_color);
 	std::queue <Node *> nodesQueue;
 
-	 Node** neighbor = (Node**)calloc(4, sizeof(Node*)) ;
+	if(n->get_color() == current_color){
+		nodesQueue.push(n);
+	} 
 
-	 neighbor[0] = get_node(nodes, n->position_y -1, n->position_x);
-	 neighbor[1] = get_node(nodes, n->position_y + 1, n->position_x);
-	 neighbor[2] = get_node(nodes, n->position_y, n->position_x - 1);
-	 neighbor[3] = get_node(nodes, n->position_y, n->position_x + 1);
+	while(nodesQueue.empty() == false){
 
+		
+		Node* current = nodesQueue.front();
+		Node* aux;
 
-	for(int i = 0; i < 4; i++){
-		nodesQueue.push(neighbor[i]);
-	}
+		current->set_color(current_color);
 
-	while(!nodesQueue.empty()){
-		Node* aux = nodesQueue.front();
-		aux->set_color(current_color);
 		nodesQueue.pop();
-	}
 
-	free(neighbor);
+		aux = get_node(nodes, current->position_y - 1, current->position_x);
+
+		if (current->position_y != 0 && aux->get_color() != current_color) {
+			
+			nodesQueue.push(aux);
+		}
+
+		aux = get_node(nodes, current->position_y + 1, current->position_x);
+
+		
+		if (current->position_y != lin - 1 && aux->get_color() != current_color) {
+			nodesQueue.push(aux);
+		}
+
+		aux = get_node(nodes, current->position_y, current->position_x - 1);
+
+		if (current->position_x != 0 && aux->get_color() != current_color) {
+			
+			nodesQueue.push(aux);
+		}
+
+		aux = get_node(nodes, current->position_y, current->position_x + 1);
+
+		if (current->position_x != col - 1 && aux->get_color() != current_color) {
+			nodesQueue.push(aux);
+		} 
+
+		/*if (n->position_x != 0) {
+			neighbor[count_neighbors] = get_node(nodes, n->position_y, n->position_x - 1);
+			count_neighbors++;
+		}
+
+		if (n->position_x != col - 1) {
+			neighbor[count_neighbors] = get_node(nodes, n->position_y, n->position_x + 1);
+			count_neighbors++;
+		}
+
+		if (n->position_y != lin - 1) {
+			neighbor[count_neighbors] = get_node(nodes, n->position_y + 1, n->position_x);
+			count_neighbors++;
+		}
+
+		if (n->position_y != 0) {
+			neighbor[count_neighbors] = get_node(nodes, n->position_y - 1, n->position_x);
+			count_neighbors++;
+		}*/
+		
+		//nodesQueue.push(get_node(nodes, nodesQueue.front()->position_y - 1, nodesQueue.front()->position_x));
+
+	}
 
 }
 
