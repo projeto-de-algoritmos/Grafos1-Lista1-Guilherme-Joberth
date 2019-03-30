@@ -1,9 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
-#ifdef linux
 #include <X11/Xlib.h>
-#endif
 
 #include <cstdlib>
 #include <iostream>
@@ -262,11 +260,35 @@ void do_eraser(Node *n){
     }
 }
 
-int main() {
+void do_bucket(Node **nodes, Node* n,sf::Color current_color){
+	n->set_color(current_color);
+	std::queue <Node *> nodesQueue;
 
-	#ifdef linux
+	 Node** neighbor = (Node**)calloc(4, sizeof(Node*)) ;
+
+	 neighbor[0] = get_node(nodes, n->position_y -1, n->position_x);
+	 neighbor[1] = get_node(nodes, n->position_y + 1, n->position_x);
+	 neighbor[2] = get_node(nodes, n->position_y, n->position_x - 1);
+	 neighbor[3] = get_node(nodes, n->position_y, n->position_x + 1);
+
+
+	for(int i = 0; i < 4; i++){
+		nodesQueue.push(neighbor[i]);
+	}
+
+	while(!nodesQueue.empty()){
+		Node* aux = nodesQueue.front();
+		aux->set_color(current_color);
+		nodesQueue.pop();
+	}
+
+	free(neighbor);
+
+}
+
+int main() {
+	
 	XInitThreads();
-	#endif
 	
 	unsigned seed = (unsigned)std::time(0);
 	
@@ -360,6 +382,9 @@ int main() {
 							break;
 						case Tools::ERASER:
 							do_eraser(n);
+							break;
+						case Tools::BUCKET:
+							do_bucket(nodes,n, colors.front());
 							break;
 						default:
 							break;
