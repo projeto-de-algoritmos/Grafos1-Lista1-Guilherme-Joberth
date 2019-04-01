@@ -118,7 +118,7 @@ void Node::registerDirection(int direction, Node *n) {
 	int reverse_direction = get_reverse_direction(direction);
 
 	// check if reverse direction is defined
-	if (n->directions[reverse_direction] == NULL) {
+	if (n->directions[reverse_direction] == NULL && n != this) {
 		
 		n->registerDirection(reverse_direction, this);
 

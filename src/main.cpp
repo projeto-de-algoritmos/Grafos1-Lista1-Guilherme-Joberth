@@ -22,6 +22,7 @@ int current_tool = Tools::PENCIL;
 std::queue<sf::Color> colors;
 
 sf::Mutex node_mutex;
+sf::Mutex bucket_mutex;
 bool skip_render = false;
 
 bool generation_running = false;
@@ -36,6 +37,13 @@ float rectangle_H = 20.f;
 
 int ms_wait = 0;
 const int ms_step = 10;
+
+struct BUCKET_ARGS
+{
+	Node **nodes;
+	Node *n;
+	sf::Color color;
+};
 
 
 
@@ -260,7 +268,33 @@ void do_eraser(Node *n){
     }
 }
 
-void do_bucket(Node **nodes, Node* n,sf::Color new_color){
+int convert_i_direction(int i, int direction){
+
+	if(direction == Node::UP_DIR) return i - 1;
+	if(direction == Node::DOWN_DIR) return i + 1;
+	return i;
+
+}
+
+
+int convert_j_direction(int j, int direction){
+
+	if(direction == Node::LEFT_DIR) return j - 1;
+	if(direction == Node::RIGHT_DIR) return j + 1;
+	return j;
+
+}
+
+void do_bucket(struct BUCKET_ARGS *args){
+
+
+	std::cout << "[BUCKET] Started bucket thread \n";
+
+	sf::Color new_color = args->color;
+	Node **nodes = args->nodes;
+	Node *n = args->n;
+
+	bucket_mutex.lock();
 
 	std::queue <Node *> nodesQueue;
 
@@ -277,39 +311,27 @@ void do_bucket(Node **nodes, Node* n,sf::Color new_color){
 
 		current->set_color(new_color);
 
-		Node* aux = get_node(nodes, current->position_y - 1, current->position_x);
+		for (int dir = 0; dir < 4; dir++){
 
-		if (current->position_y != 0 && aux->get_color() == old_color) {
-			
-			nodesQueue.push(aux);
-			current->registerDirection(0, aux);
+			int i = convert_i_direction(current->position_y, dir);
+			int j = convert_j_direction(current->position_x, dir);
+
+			Node* aux = get_node(nodes, i, j);
+
+			if (aux == NULL) continue;
+
+			if (aux->get_color() == old_color) {
+				nodesQueue.push(aux);
+				current->registerDirection(dir, aux);
+
+			} else if (aux->get_color() == new_color && aux->directions[dir] != current){
+				current->registerDirection(dir, aux);
+
+			}
 		}
-
-		aux = get_node(nodes, current->position_y + 1, current->position_x);
-
-		
-		if (current->position_y != lin - 1 && aux->get_color() == old_color) {
-			nodesQueue.push(aux);
-			 current->registerDirection(1, aux);
-		}
-
-		aux = get_node(nodes, current->position_y, current->position_x - 1);
-
-		if (current->position_x != 0 && aux->get_color() == old_color) {
-			
-			nodesQueue.push(aux);
-			current->registerDirection(2, aux);
-		}
-
-
-		aux = get_node(nodes, current->position_y, current->position_x + 1);
-
-		if (current->position_x != col - 1 && aux->get_color() == old_color) {
-			nodesQueue.push(aux);
-			current->registerDirection(3, aux);
-		} 
-
 	}
+
+	bucket_mutex.unlock();
 
 }
 
@@ -402,21 +424,23 @@ int main() {
 				
 				if (n){
 
-					switch (current_tool)
-					{
-						case Tools::PENCIL:
+					if (current_tool == Tools::PENCIL){
 							do_pencil(nodes, n, colors.front());
-							break;
-						case Tools::ERASER:
+					}else if(current_tool == Tools::ERASER){
 							do_eraser(n);
-							break;
-						case Tools::BUCKET:
-							do_bucket(nodes,n, colors.front());
-							break;
-						default:
-							break;
-					}
+					}else if (current_tool == Tools::BUCKET){
 
+						struct BUCKET_ARGS *bucket_args = (BUCKET_ARGS *)malloc(sizeof(BUCKET_ARGS));
+						
+						bucket_args->color = colors.front();
+						bucket_args->nodes = nodes;
+						bucket_args->n = n;
+
+						std::cout << "[MAIN] Creating bucket thread \n";
+						sf::Thread bucket_thread(&do_bucket, bucket_args);
+						bucket_thread.launch();
+
+					}
 				}
 			}
 
