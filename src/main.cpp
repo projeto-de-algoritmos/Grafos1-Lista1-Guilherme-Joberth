@@ -7,6 +7,7 @@
 #include <iostream>
 #include <ctime>
 #include <queue>
+#include <set>
 #include <map>
 #include <list>
 
@@ -50,7 +51,7 @@ struct BUCKET_ARGS
 Node *get_node(Node** nodes, int i, int j){
 
 
-	if(i >= lin || j >= col){
+	if(i >= lin || j >= col || i < 0 || j < 0){
 		return NULL;
 	}
 
@@ -297,11 +298,13 @@ void do_bucket(struct BUCKET_ARGS *args){
 	bucket_mutex.lock();
 
 	std::queue <Node *> nodesQueue;
+	std::set<Node *> visitedNodes;
 
 	sf::Color old_color = n->get_color();
 
 	if(n->get_color() != new_color){
 		nodesQueue.push(n);
+		visitedNodes.insert(n);
 	} 
 
 	while(nodesQueue.empty() == false){
@@ -310,25 +313,29 @@ void do_bucket(struct BUCKET_ARGS *args){
 		nodesQueue.pop();
 
 		current->set_color(new_color);
-
+		
 		for (int dir = 0; dir < 4; dir++){
 
 			int i = convert_i_direction(current->position_y, dir);
 			int j = convert_j_direction(current->position_x, dir);
 
 			Node* aux = get_node(nodes, i, j);
-
 			if (aux == NULL) continue;
 
-			if (aux->get_color() == old_color) {
-				nodesQueue.push(aux);
+			if (aux->get_color() == old_color && visitedNodes.insert(aux).second) {
+				
+				nodesQueue.push(aux);	
 				current->registerDirection(dir, aux);
-
-			} else if (aux->get_color() == new_color && aux->directions[dir] != current){
+			}
+			
+			if (aux->get_color() == new_color &&
+				aux->directions[aux->get_reverse_direction(dir)] != current
+			){
 				current->registerDirection(dir, aux);
-
 			}
 		}
+
+		sf::sleep(sf::milliseconds(ms_wait));
 	}
 
 	bucket_mutex.unlock();

@@ -110,6 +110,8 @@ int Node::get_reverse_direction(int direction){
 
 void Node::registerDirection(int direction, Node *n) {
 
+	if (this->directions[direction] == this) return;
+
 	this->directions[direction] = n;
 
 	this->shapes[direction]->setFillColor(sf::Color::Transparent);
@@ -118,7 +120,7 @@ void Node::registerDirection(int direction, Node *n) {
 	int reverse_direction = get_reverse_direction(direction);
 
 	// check if reverse direction is defined
-	if (n->directions[reverse_direction] == NULL && n != this) {
+	if (n->directions[reverse_direction] == NULL) {
 		
 		n->registerDirection(reverse_direction, this);
 
